@@ -1,21 +1,47 @@
 pub mod arena {
     //! Module providing a generational arena based off a vector.
+    //!
+    //! Usage:
+    //! ```
+    //! use lrucache::arena::Arena;
+    //!
+    //! let mut arena = Arena::<i32>::with_capacity(10); // create arena
+    //! let index = arena.insert(78).unwrap(); // allocate new element in arena
+    //! let i_ref = arena.get(&index);
+    //! assert_eq!(i_ref, Some(&78));
+    //! let i_m_ref = arena.get_mut(&index).unwrap();
+    //! *i_m_ref = -68418; // this close from greatness
+    //! assert_eq!(arena.get(&index), Some(&-68418));
+    //!
+    //! arena.remove(&index).unwrap();
+    //!
+    //! assert!(arena.get(&index).is_none());
+    //! ```
 
     use std::fmt::Display;
 
-    /// Index in vector to allocated entry.
+    /// Index in vector to allocated entry. Used to access items allocated in
+    /// the arena.
     #[derive(Debug, PartialEq)]
     pub struct Index {
         pub idx: usize,
         pub generation: u64,
     }
 
+    /// Entry represents an arena allocation entry. It is used to track free
+    /// and Occupied blocks along with generation counters for Occupied
+    /// blocks.
     #[derive(Debug, PartialEq)]
     pub enum Entry<T> {
         Free { next_free: Option<usize> },
         Occupied { value: T, generation: u64 },
     }
 
+    /// A generational arena for allocating memory based off a vector. Every
+    /// entry is associated with a generation counter to uniquely identify
+    /// newer allocations from older reclaimed allocations at the same
+    /// position in the vector.
+    /// This is inspired from the crate "generational-arena" on cargo.rs
     pub struct Arena<T> {
         items: Vec<Entry<T>>,
         capacity: usize,
@@ -25,6 +51,7 @@ pub mod arena {
         free_list_head: Option<usize>,
     }
 
+    /// Arena out of memory error.
     #[derive(Debug, Clone, PartialEq)]
     pub struct ArenaOOM;
 
@@ -72,20 +99,6 @@ pub mod arena {
             let mut arena = Self::new();
             arena.reserve(capacity);
             arena
-        }
-
-        pub fn exists(&self, index: &Index) -> bool {
-            if let Some(entry) = self.items.get(index.idx) {
-                return match entry {
-                    Entry::Occupied {
-                        value: _,
-                        generation,
-                    } => &index.generation == generation,
-                    Entry::Free { next_free: _ } => false,
-                };
-            }
-
-            false
         }
 
         pub fn insert(&mut self, item: T) -> Result<Index, ArenaOOM> {
@@ -263,6 +276,55 @@ pub mod arena {
                         generation: (old_cap + ele) as u64
                     })
                 )
+            }
+        }
+
+        #[test]
+        fn arena_remove() {
+            let mut arena = Arena::<i32>::with_capacity(1);
+
+            let index = arena.insert(0).unwrap();
+            assert_eq!(arena.get(&index), Some(&0));
+
+            arena.remove(&index).unwrap();
+
+            assert_eq!(arena.get(&index), None);
+
+            let index = arena.insert(0).unwrap();
+            assert_eq!(
+                index,
+                Index {
+                    idx: 0,
+                    generation: 1
+                }
+            );
+
+            arena.remove(&index).unwrap();
+            assert!(arena.remove(&index).is_none());
+
+            let current_gen = 2;
+
+            let to_reserve = 5;
+            arena.reserve(to_reserve);
+            for ele in 0..to_reserve + 1 {
+                // free list head moves forward. list circles back to start
+                if ele == to_reserve {
+                    assert_eq!(
+                        arena.insert(0),
+                        Ok(Index {
+                            idx: 0,
+                            generation: (current_gen + ele) as u64
+                        })
+                    )
+                } else {
+                    assert_eq!(
+                        arena.insert(0),
+                        Ok(Index {
+                            idx: ele + 1,
+                            generation: (current_gen + ele) as u64
+                        })
+                    )
+                }
             }
         }
     }
