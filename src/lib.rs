@@ -22,7 +22,7 @@ pub mod arena {
 
     /// Index in vector to allocated entry. Used to access items allocated in
     /// the arena.
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone, Copy)]
     pub struct Index {
         pub idx: usize,
         pub generation: u64,
@@ -126,7 +126,7 @@ pub mod arena {
             })
         }
 
-        pub fn remove(&mut self, index: &Index) -> Option<()> {
+        pub fn remove(&mut self, index: &Index) -> Option<T> {
             if let Some(entry) = self.items.get(index.idx) {
                 if let Entry::Occupied {
                     value: _,
@@ -140,9 +140,18 @@ pub mod arena {
                     let entry = Entry::<T>::Free {
                         next_free: self.free_list_head,
                     };
-                    self.items[index.idx] = entry;
+
+                    let old_entry = core::mem::replace(&mut self.items[index.idx], entry);
+
                     self.free_list_head = Some(index.idx);
-                    return Some(());
+
+                    if let Entry::Occupied {
+                        value,
+                        generation: _,
+                    } = old_entry
+                    {
+                        return Some(value);
+                    }
                 }
             }
 
@@ -286,11 +295,11 @@ pub mod arena {
             let index = arena.insert(0).unwrap();
             assert_eq!(arena.get(&index), Some(&0));
 
-            arena.remove(&index).unwrap();
+            assert_eq!(arena.remove(&index).unwrap(), 0);
 
             assert_eq!(arena.get(&index), None);
 
-            let index = arena.insert(0).unwrap();
+            let index = arena.insert(56).unwrap();
             assert_eq!(
                 index,
                 Index {
@@ -299,7 +308,7 @@ pub mod arena {
                 }
             );
 
-            arena.remove(&index).unwrap();
+            assert_eq!(arena.remove(&index).unwrap(), 56);
             assert!(arena.remove(&index).is_none());
 
             let current_gen = 2;
@@ -326,6 +335,188 @@ pub mod arena {
                     )
                 }
             }
+        }
+    }
+}
+
+pub mod list {
+    use std::fmt::Display;
+
+    use crate::arena::{Arena, ArenaOOM, Index};
+
+    #[derive(Clone, Copy, PartialEq)]
+    pub struct Link {
+        pub index: Index,
+    }
+
+    pub struct Node<T> {
+        pub value: T,
+        pub next: Option<Link>,
+        pub prev: Option<Link>,
+    }
+
+    pub struct LinkedList<T> {
+        arena: Arena<Node<T>>,
+
+        head: Option<Link>,
+        tail: Option<Link>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    pub enum ListError {
+        LinkBroken,
+        ListOOM(ArenaOOM),
+        ListEmpty,
+    }
+
+    impl Display for ListError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match &self {
+                ListError::LinkBroken => write!(f, "Link does not point to a valid location."),
+                ListError::ListOOM(e) => e.fmt(f),
+                ListError::ListEmpty => write!(f, "List is empty."),
+            }
+        }
+    }
+
+    impl<T> LinkedList<T> {
+        pub fn with_capacity(capacity: usize) -> Self {
+            LinkedList {
+                arena: Arena::with_capacity(capacity),
+                head: None,
+                tail: None,
+            }
+        }
+
+        pub fn reserve(&mut self, capacity: usize) {
+            self.arena.reserve(capacity)
+        }
+
+        pub fn get_mut(&mut self, link: &Link) -> Result<&mut Node<T>, ListError> {
+            let node = self
+                .arena
+                .get_mut(&link.index)
+                .ok_or(ListError::LinkBroken)?;
+            Ok(node)
+        }
+
+        pub fn get(&self, link: &Link) -> Result<&Node<T>, ListError> {
+            let node = self.arena.get(&link.index).ok_or(ListError::LinkBroken)?;
+            Ok(node)
+        }
+
+        pub fn push_back(&mut self, value: T) -> Result<Link, ListError> {
+            let node = Node {
+                value,
+                next: None,
+                prev: self.tail,
+            };
+
+            let index = self.arena.insert(node).map_err(ListError::ListOOM)?;
+            let link = Link { index };
+            if let Some(tail) = self.tail {
+                let tail_node = self.get_mut(&tail)?;
+                tail_node.next = Some(link);
+            } else {
+                self.head = Some(link)
+            }
+
+            self.tail = Some(link);
+
+            Ok(link)
+        }
+
+        pub fn head(&self) -> Option<Link> {
+            self.head
+        }
+
+        pub fn tail(&self) -> Option<Link> {
+            self.tail
+        }
+
+        pub fn peek_front(&self) -> Result<&T, ListError> {
+            let head_link = self.head.ok_or(ListError::ListEmpty)?;
+            return self.get(&head_link).map(|x| &x.value);
+        }
+
+        pub fn peek_back(&self) -> Result<&T, ListError> {
+            let tail_link = self.tail.ok_or(ListError::ListEmpty)?;
+            return self.get(&tail_link).map(|x| &x.value);
+        }
+
+        pub fn pop_front(&mut self) -> Result<T, ListError> {
+            let head_link = self.head.ok_or(ListError::ListEmpty)?;
+            let node = self
+                .arena
+                .remove(&head_link.index)
+                .ok_or(ListError::LinkBroken)?;
+
+            self.head = node.next;
+
+            if let Some(link) = self.head {
+                let cur_head_node = self.get_mut(&link)?;
+                cur_head_node.prev = None;
+            } else {
+                self.tail = None;
+            }
+
+            return Ok(node.value);
+        }
+
+        pub fn pop_back(&mut self) -> Result<T, ListError> {
+            let tail_link = self.tail.ok_or(ListError::ListEmpty)?;
+            let node = self
+                .arena
+                .remove(&tail_link.index)
+                .ok_or(ListError::LinkBroken)?;
+
+            self.tail = node.prev;
+            if let Some(link) = self.tail {
+                let cur_tail_node = self.get_mut(&link)?;
+                cur_tail_node.next = None;
+            } else {
+                self.head = None;
+            }
+
+            return Ok(node.value);
+        }
+
+        pub fn remove(&mut self, link: &Link) -> Result<T, ListError> {
+            let head = self.head.ok_or(ListError::ListEmpty)?;
+            let tail = self.tail.ok_or(ListError::ListEmpty)?;
+
+            if link == &head {
+                return self.pop_front();
+            }
+
+            if link == &tail {
+                return self.pop_back();
+            }
+
+            let node = self
+                .arena
+                .remove(&link.index)
+                .ok_or(ListError::LinkBroken)?;
+            let prev_link = node.prev.ok_or(ListError::LinkBroken)?;
+            let next_link = node.next.ok_or(ListError::LinkBroken)?;
+
+            let prev = self.get_mut(&prev_link)?;
+            prev.next = Some(next_link);
+
+            let next = self.get_mut(&next_link)?;
+            next.prev = Some(prev_link);
+
+            return Ok(node.value);
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+
+        #[test]
+        fn it_works() {
+            let result = 2 + 2;
+            assert_eq!(result, 4);
         }
     }
 }
