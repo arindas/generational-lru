@@ -1,3 +1,5 @@
+#[forbid(unsafe_code)]
+
 pub mod arena {
     //! Module providing a generational arena based off a vector.
     //!
