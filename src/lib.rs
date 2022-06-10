@@ -769,3 +769,88 @@ pub mod list {
         }
     }
 }
+
+pub mod lrucache {
+    //! Module providing a Least-Recently-Used (LRU) Cache implementation.
+
+    use crate::list::{Link, LinkedList, ListError};
+    use std::{collections::HashMap, fmt::Display, hash::Hash};
+
+    /// Cache block storing some key and value.
+    pub struct Block<K, V> {
+        pub key: K,
+        pub value: V,
+    }
+
+    /// A Least-Recently-Used (LRU) Cache implemented using a generational arena
+    /// based linked list and a hash map.
+    pub struct LRUCache<K, V>
+    where
+        K: Eq + Hash,
+    {
+        blocks: LinkedList<Block<K, V>>,
+        block_refs: HashMap<K, Link>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    pub enum CacheError {
+        CacheBroken(ListError),
+        CacheMiss,
+    }
+
+    impl Display for CacheError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match &self {
+                CacheError::CacheBroken(list_error) => {
+                    write!(f, "Cache storage is broken: ")?;
+                    list_error.fmt(f)
+                }
+                CacheError::CacheMiss => write!(f, "Key not found in cache."),
+            }
+        }
+    }
+
+    impl<K, V> LRUCache<K, V>
+    where
+        K: Eq + Hash + Copy,
+    {
+        pub fn with_capacity(capacity: usize) -> Self {
+            LRUCache {
+                blocks: LinkedList::with_capacity(capacity),
+                block_refs: HashMap::new(),
+            }
+        }
+
+        pub fn get(&self, key: &K) -> Result<&V, CacheError> {
+            let link = self.block_refs.get(key).ok_or(CacheError::CacheMiss)?;
+            let node = self.blocks.get(&link).map_err(CacheError::CacheBroken)?;
+            Ok(&node.value.value)
+        }
+
+        pub fn remove(&mut self, key: &K) -> Result<V, CacheError> {
+            let link = self.block_refs.remove(key).ok_or(CacheError::CacheMiss)?;
+            let block = self.blocks.remove(&link).map_err(CacheError::CacheBroken)?;
+            Ok(block.value)
+        }
+
+        pub fn insert(&mut self, key: K, value: V) -> Result<(), CacheError> {
+            let remove_result = self.remove(&key);
+            if let Err(CacheError::CacheBroken(_)) = &remove_result {
+                remove_result?;
+            }
+
+            if self.blocks.full() {
+                let block = self.blocks.pop_front().map_err(CacheError::CacheBroken)?;
+                self.block_refs.remove(&block.key);
+            }
+
+            let link = self
+                .blocks
+                .push_back(Block { key, value })
+                .map_err(CacheError::CacheBroken)?;
+            self.block_refs.insert(key, link);
+
+            Ok(())
+        }
+    }
+}
