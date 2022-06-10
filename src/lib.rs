@@ -41,7 +41,8 @@ pub mod arena {
     /// entry is associated with a generation counter to uniquely identify
     /// newer allocations from older reclaimed allocations at the same
     /// position in the vector.
-    /// This is inspired from the crate "generational-arena" on cargo.rs
+    /// This is inspired from the crate
+    /// ["generational-arena"](https://docs.rs/generational-arena)
     pub struct Arena<T> {
         items: Vec<Entry<T>>,
         capacity: usize,
@@ -340,26 +341,75 @@ pub mod arena {
 }
 
 pub mod list {
+    //! Module providing a doubly linked list based deque implementation using a
+    //! generational arena.
+    //!
+    //! Usage:
+    //! ```
+    //! use lrucache::list::*;
+    //!
+    //! let capacity = 10;
+    //! let mut list = LinkedList::<i32>::with_capacity(capacity);
+    //! for ele in 0..capacity {
+    //!     assert!(list.push_back(ele as i32).is_ok());
+    //! }
+    //!
+    //! let mut i = 0;
+    //! for ele in list.iter() {
+    //!     assert_eq!(ele, &i);
+    //!     i += 1;
+    //! }
+    //!
+    //! let capacity = 10;
+    //!
+    //! let mut list = LinkedList::<i32>::with_capacity(capacity);
+    //! assert_eq!(list.pop_front(), Err(ListError::ListEmpty));
+    //!
+    //! for ele in 0..capacity {
+    //!     assert!(list.push_back(ele as i32).is_ok());
+    //! }
+    //!
+    //! for ele in 0..capacity {
+    //!     assert_eq!(list.pop_front().unwrap(), ele as i32);
+    //! }
+    //!
+    //! assert!(list.empty());
+    //! assert_eq!(list.pop_front(), Err(ListError::ListEmpty));
+    //!
+    //! ```
+
     use std::fmt::Display;
 
     use crate::arena::{Arena, ArenaOOM, Index};
 
-    #[derive(Clone, Copy, PartialEq)]
+    /// Analogous to a pointer to a Node for our generational arena list. A link
+    /// uniquely refers to a node in our linked list.
+    #[derive(Debug, Clone, Copy, PartialEq)]
     pub struct Link {
         pub index: Index,
     }
 
+    /// A Node in our linked list. It uses `Option<Link>` to point to other nodes.
     pub struct Node<T> {
         pub value: T,
         pub next: Option<Link>,
         pub prev: Option<Link>,
     }
 
+    /// A generational arena based doubly linked list implementation.
     pub struct LinkedList<T> {
         arena: Arena<Node<T>>,
 
         head: Option<Link>,
         tail: Option<Link>,
+
+        len: usize,
+    }
+
+    /// Iterator for our LinkedList.
+    pub struct Iter<'a, T: 'a> {
+        list: &'a LinkedList<T>,
+        current: Option<Link>,
     }
 
     #[derive(Debug, Clone, PartialEq)]
@@ -380,12 +430,34 @@ pub mod list {
     }
 
     impl<T> LinkedList<T> {
+        pub fn new() -> Self {
+            LinkedList {
+                arena: Arena::new(),
+                head: None,
+                tail: None,
+                len: 0,
+            }
+        }
+
         pub fn with_capacity(capacity: usize) -> Self {
             LinkedList {
                 arena: Arena::with_capacity(capacity),
                 head: None,
                 tail: None,
+                len: 0,
             }
+        }
+
+        pub fn len(&self) -> usize {
+            self.len
+        }
+
+        pub fn empty(&self) -> bool {
+            self.head.is_none()
+        }
+
+        pub fn full(&self) -> bool {
+            self.len == self.arena.capacity()
         }
 
         pub fn reserve(&mut self, capacity: usize) {
@@ -403,6 +475,28 @@ pub mod list {
         pub fn get(&self, link: &Link) -> Result<&Node<T>, ListError> {
             let node = self.arena.get(&link.index).ok_or(ListError::LinkBroken)?;
             Ok(node)
+        }
+
+        pub fn push_front(&mut self, value: T) -> Result<Link, ListError> {
+            let node = Node {
+                value,
+                next: self.head,
+                prev: None,
+            };
+
+            let index = self.arena.insert(node).map_err(ListError::ListOOM)?;
+            let link = Link { index };
+            if let Some(head) = self.head {
+                let head_node = self.get_mut(&head)?;
+                head_node.prev = Some(link);
+            } else {
+                self.tail = Some(link);
+            }
+
+            self.head = Some(link);
+
+            self.len += 1;
+            Ok(link)
         }
 
         pub fn push_back(&mut self, value: T) -> Result<Link, ListError> {
@@ -423,6 +517,7 @@ pub mod list {
 
             self.tail = Some(link);
 
+            self.len += 1;
             Ok(link)
         }
 
@@ -460,6 +555,7 @@ pub mod list {
                 self.tail = None;
             }
 
+            self.len -= 1;
             return Ok(node.value);
         }
 
@@ -478,6 +574,7 @@ pub mod list {
                 self.head = None;
             }
 
+            self.len -= 1;
             return Ok(node.value);
         }
 
@@ -506,17 +603,167 @@ pub mod list {
             let next = self.get_mut(&next_link)?;
             next.prev = Some(prev_link);
 
+            self.len -= 1;
             return Ok(node.value);
+        }
+
+        pub fn iter(&self) -> Iter<T> {
+            Iter {
+                list: &self,
+                current: self.head(),
+            }
+        }
+    }
+
+    impl<'a, T: 'a> Iterator for Iter<'a, T> {
+        type Item = &'a T;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            if let Some(link) = self.current {
+                if let Some(node) = self.list.get(&link).ok() {
+                    self.current = node.next;
+                    return Some(&node.value);
+                }
+            }
+
+            None
         }
     }
 
     #[cfg(test)]
     mod tests {
+        use super::*;
 
         #[test]
         fn it_works() {
             let result = 2 + 2;
             assert_eq!(result, 4);
+        }
+
+        #[test]
+        fn list_new() {
+            let mut list = LinkedList::<i32>::new();
+            assert!(list.empty());
+            assert!(list.full());
+
+            assert_eq!(list.peek_front(), Err(ListError::ListEmpty));
+            assert_eq!(list.peek_back(), Err(ListError::ListEmpty));
+
+            assert_eq!(list.push_back(0), Err(ListError::ListOOM(ArenaOOM {})));
+        }
+
+        #[test]
+        fn list_with_capacity() {
+            let capacity = 5;
+            let mut list = LinkedList::<i32>::with_capacity(capacity);
+            assert!(list.empty());
+            for _ in 0..capacity {
+                assert!(list.push_back(0).is_ok())
+            }
+            assert!(list.full());
+            assert_eq!(list.push_back(0), Err(ListError::ListOOM(ArenaOOM {})));
+        }
+
+        #[test]
+        fn list_push_back() {
+            let capacity = 10;
+            let mut list = LinkedList::<i32>::with_capacity(capacity);
+            for ele in 0..capacity {
+                assert!(list.push_back(ele as i32).is_ok());
+            }
+
+            let mut i = 0;
+            for ele in list.iter() {
+                assert_eq!(ele, &i);
+                i += 1;
+            }
+        }
+
+        #[test]
+        fn list_push_front() {
+            let capacity = 10;
+            let mut list = LinkedList::<i32>::with_capacity(capacity);
+            for ele in 0..capacity {
+                assert!(list.push_front(ele as i32).is_ok());
+            }
+
+            let mut i = capacity as i32 - 1;
+            for ele in list.iter() {
+                assert_eq!(ele, &i);
+                i -= 1;
+            }
+        }
+
+        #[test]
+        fn list_pop_front() {
+            let capacity = 10;
+            let mut list = LinkedList::<i32>::with_capacity(capacity);
+
+            assert_eq!(list.pop_front(), Err(ListError::ListEmpty));
+
+            for ele in 0..capacity {
+                assert!(list.push_back(ele as i32).is_ok());
+            }
+
+            for ele in 0..capacity {
+                assert_eq!(list.pop_front().unwrap(), ele as i32);
+            }
+
+            assert!(list.empty());
+            assert_eq!(list.pop_front(), Err(ListError::ListEmpty));
+        }
+
+        #[test]
+        fn list_pop_back() {
+            let capacity = 10;
+            let mut list = LinkedList::<i32>::with_capacity(capacity);
+
+            assert_eq!(list.pop_back(), Err(ListError::ListEmpty));
+
+            for ele in 0..capacity {
+                assert!(list.push_front(ele as i32).is_ok());
+            }
+
+            for ele in 0..capacity {
+                assert_eq!(list.pop_back().unwrap(), ele as i32);
+            }
+
+            assert!(list.empty());
+            assert_eq!(list.pop_back(), Err(ListError::ListEmpty));
+        }
+
+        #[test]
+        fn list_remove() {
+            let mut list = LinkedList::<i32>::with_capacity(5);
+            assert!(list.empty());
+
+            let link_0 = list.push_back(0).unwrap();
+            let _link_1 = list.push_back(1).unwrap();
+            let link_2 = list.push_back(2).unwrap();
+            let _link_3 = list.push_back(3).unwrap();
+            let link_4 = list.push_back(4).unwrap();
+
+            assert!(list.full());
+
+            assert_eq!(list.peek_front().unwrap(), &0);
+            assert_eq!(list.peek_back().unwrap(), &4);
+
+            assert!(list.remove(&link_0).is_ok());
+            assert_eq!(list.len(), 4);
+
+            assert_eq!(list.peek_front().unwrap(), &1);
+            assert_eq!(list.peek_back().unwrap(), &4);
+
+            assert!(list.remove(&link_4).is_ok());
+            assert_eq!(list.len(), 3);
+
+            assert_eq!(list.peek_front().unwrap(), &1);
+            assert_eq!(list.peek_back().unwrap(), &3);
+
+            assert!(list.remove(&link_2).is_ok());
+            assert_eq!(list.len(), 2);
+
+            assert!(list.iter().eq([1, 3].iter()));
         }
     }
 }
