@@ -2,8 +2,7 @@
 
 Crate providing a 100% safe, generational arena based LRU cache implementation.
 
-Usage:
-```
+```rust
 use lrucache::lrucache::{LRUCache, CacheError};
 
 let capacity = 5;
@@ -44,3 +43,12 @@ assert!(matches!(
 
 ```
 
+## Usage
+This is a library crate. You may include it in your `Cargo.toml` as follows:
+```toml
+[dependencies]
+lrucache = { git = "https://github.com/arindas/lrucache" }
+```
+
+## License
+This repository is licensed under the MIT License. See [LICENSE](./LICENSE) for the full license text.

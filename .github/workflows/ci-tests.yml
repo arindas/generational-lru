@@ -1,0 +1,22 @@
+name: ci-tests
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - src/**
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - src/**
+
+jobs:
+  test-using-cargo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: cargo test
