@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["CacheError",""]],"struct":[["Block","Cache block storing some key and value."],["LRUCache","A Least-Recently-Used (LRU) Cache implemented using a generational arena based linked list and a hash map."]]});
