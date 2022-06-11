@@ -1,3 +1,47 @@
+//! Crate providing a 100% safe, generational arena based LRUCache implementation.
+//!
+//! Usage:
+//! ```
+//! use lrucache::lrucache::{LRUCache, CacheError};
+//!
+//! let capacity = 5;
+//!
+//! let mut lru_cache = LRUCache::<i32, i32>::with_capacity(capacity);
+//! assert_eq!(lru_cache.get(&0), Err(CacheError::CacheMiss));
+//!
+//! for ele in 0..capacity {
+//!     let x = ele as i32;
+//!     assert!(lru_cache.insert(x, x).is_ok());
+//! }
+//!
+//! for ele in 0..capacity {
+//!     let x = ele as i32;
+//!     assert_eq!(lru_cache.get(&x), Ok(&x));
+//! }
+//!
+//! let x = capacity as i32;
+//! assert!(lru_cache.insert(x, x).is_ok());
+//!
+//! assert_eq!(lru_cache.get(&x), Ok(&x));
+//!
+//! assert_eq!(lru_cache.get(&0), Err(CacheError::CacheMiss));
+//!
+//! let x = capacity as i32 / 2;
+//! assert_eq!(lru_cache.remove(&x), Ok(x));
+//!
+//! assert_eq!(lru_cache.get(&x), Err(CacheError::CacheMiss));
+//! assert_eq!(lru_cache.remove(&x), Err(CacheError::CacheMiss));
+//!
+//! // zero capacity LRUCache is unusable
+//! let mut lru_cache = LRUCache::<i32, i32>::with_capacity(0);
+//!
+//! assert!(matches!(
+//!     lru_cache.insert(0, 0),
+//!     Err(CacheError::CacheBroken(_))
+//! ));
+//!
+//! ```
+
 #[forbid(unsafe_code)]
 
 pub mod arena {
@@ -189,12 +233,6 @@ pub mod arena {
     #[cfg(test)]
     mod tests {
         use super::*;
-
-        #[test]
-        fn it_works() {
-            let result = 2 + 2;
-            assert_eq!(result, 4);
-        }
 
         #[test]
         fn arena_new() {
@@ -425,7 +463,10 @@ pub mod list {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match &self {
                 ListError::LinkBroken => write!(f, "Link does not point to a valid location."),
-                ListError::ListOOM(e) => e.fmt(f),
+                ListError::ListOOM(arena_oom) => {
+                    write!(f, "List out of memory: ")?;
+                    arena_oom.fmt(f)
+                }
                 ListError::ListEmpty => write!(f, "List is empty."),
             }
         }
@@ -637,12 +678,6 @@ pub mod list {
         use super::*;
 
         #[test]
-        fn it_works() {
-            let result = 2 + 2;
-            assert_eq!(result, 4);
-        }
-
-        #[test]
         fn list_new() {
             let mut list = LinkedList::<i32>::new();
             assert!(list.empty());
@@ -772,6 +807,48 @@ pub mod list {
 
 pub mod lrucache {
     //! Module providing a Least-Recently-Used (LRU) Cache implementation.
+    //!
+    //! Usage:
+    //! ```
+    //! use lrucache::lrucache::{LRUCache, CacheError};
+    //!
+    //! let capacity = 5;
+    //!
+    //! let mut lru_cache = LRUCache::<i32, i32>::with_capacity(capacity);
+    //! assert_eq!(lru_cache.get(&0), Err(CacheError::CacheMiss));
+    //!
+    //! for ele in 0..capacity {
+    //!     let x = ele as i32;
+    //!     assert!(lru_cache.insert(x, x).is_ok());
+    //! }
+    //!
+    //! for ele in 0..capacity {
+    //!     let x = ele as i32;
+    //!     assert_eq!(lru_cache.get(&x), Ok(&x));
+    //! }
+    //!
+    //! let x = capacity as i32;
+    //! assert!(lru_cache.insert(x, x).is_ok());
+    //!
+    //! assert_eq!(lru_cache.get(&x), Ok(&x));
+    //!
+    //! assert_eq!(lru_cache.get(&0), Err(CacheError::CacheMiss));
+    //!
+    //! let x = capacity as i32 / 2;
+    //! assert_eq!(lru_cache.remove(&x), Ok(x));
+    //!
+    //! assert_eq!(lru_cache.get(&x), Err(CacheError::CacheMiss));
+    //! assert_eq!(lru_cache.remove(&x), Err(CacheError::CacheMiss));
+    //!
+    //! // zero capacity LRUCache is unusable
+    //! let mut lru_cache = LRUCache::<i32, i32>::with_capacity(0);
+    //!
+    //! assert!(matches!(
+    //!     lru_cache.insert(0, 0),
+    //!     Err(CacheError::CacheBroken(_))
+    //! ));
+    //!
+    //! ```
 
     use crate::list::{Link, LinkedList, ListError};
     use std::{collections::HashMap, fmt::Display, hash::Hash};
@@ -814,6 +891,8 @@ pub mod lrucache {
     where
         K: Eq + Hash + Copy,
     {
+        /// Creates an LRUCache instance with the given capacity. A zero capacity LRUCache is
+        /// unusable.
         pub fn with_capacity(capacity: usize) -> Self {
             LRUCache {
                 blocks: LinkedList::with_capacity(capacity),
@@ -821,18 +900,27 @@ pub mod lrucache {
             }
         }
 
+        /// Returns a reference to the value associated with the given key. If the key is not
+        /// present in the cache, we return a "cache-miss" error. If the entry is found but
+        /// cannot be fetched from the underlying storage, we return a "cache-broken" error.
         pub fn get(&self, key: &K) -> Result<&V, CacheError> {
             let link = self.block_refs.get(key).ok_or(CacheError::CacheMiss)?;
             let node = self.blocks.get(&link).map_err(CacheError::CacheBroken)?;
             Ok(&node.value.value)
         }
 
+        /// Removes the associated key value pair for the given key from this cache. If no
+        /// entry is found, we return a "cache-miss" error. If the entry is found but cannot
+        /// be fetched from the underlying in-memory storage, we return a "cache-broken" error.
+        /// Returns the value associated, after removal with ownership.
         pub fn remove(&mut self, key: &K) -> Result<V, CacheError> {
             let link = self.block_refs.remove(key).ok_or(CacheError::CacheMiss)?;
             let block = self.blocks.remove(&link).map_err(CacheError::CacheBroken)?;
             Ok(block.value)
         }
 
+        /// Inserts a new key value pair into this cache. If this cache is full, the least
+        /// recently used entry is removed.
         pub fn insert(&mut self, key: K, value: V) -> Result<(), CacheError> {
             let remove_result = self.remove(&key);
             if let Err(CacheError::CacheBroken(_)) = &remove_result {
@@ -851,6 +939,48 @@ pub mod lrucache {
             self.block_refs.insert(key, link);
 
             Ok(())
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn lru_cache_consistency() {
+            let mut lru_cache = LRUCache::<i32, i32>::with_capacity(0);
+            assert_eq!(
+                lru_cache.insert(0, 0),
+                Err(CacheError::CacheBroken(ListError::ListEmpty))
+            );
+
+            let capacity = 5;
+
+            let mut lru_cache = LRUCache::<i32, i32>::with_capacity(capacity);
+            assert_eq!(lru_cache.get(&0), Err(CacheError::CacheMiss));
+
+            for ele in 0..capacity {
+                let x = ele as i32;
+                assert!(lru_cache.insert(x, x).is_ok());
+            }
+
+            for ele in 0..capacity {
+                let x = ele as i32;
+                assert_eq!(lru_cache.get(&x), Ok(&x));
+            }
+
+            let x = capacity as i32;
+            assert!(lru_cache.insert(x, x).is_ok());
+
+            assert_eq!(lru_cache.get(&x), Ok(&x));
+
+            assert_eq!(lru_cache.get(&0), Err(CacheError::CacheMiss));
+
+            let x = capacity as i32 / 2;
+            assert_eq!(lru_cache.remove(&x), Ok(x));
+
+            assert_eq!(lru_cache.get(&x), Err(CacheError::CacheMiss));
+            assert_eq!(lru_cache.remove(&x), Err(CacheError::CacheMiss));
         }
     }
 }
