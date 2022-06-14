@@ -45,6 +45,8 @@ assert!(matches!(
 
 ```
 
+Refer to [API documentation](https://arindas.github.io/lrucache/lrucache) for more details.
+
 ## Usage
 This is a library crate. You may include it in your `Cargo.toml` as follows:
 ```toml
