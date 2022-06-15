@@ -108,6 +108,12 @@ pub mod arena {
         }
     }
 
+    impl<T> Default for Arena<T> {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl<T> Arena<T> {
         pub fn new() -> Self {
             Arena {
@@ -174,31 +180,29 @@ pub mod arena {
         }
 
         pub fn remove(&mut self, index: &Index) -> Option<T> {
-            if let Some(entry) = self.items.get(index.idx) {
+            if let Some(Entry::Occupied {
+                value: _,
+                generation,
+            }) = self.items.get(index.idx)
+            {
+                if &index.generation != generation {
+                    return None;
+                }
+
+                let entry = Entry::<T>::Free {
+                    next_free: self.free_list_head,
+                };
+
+                let old_entry = core::mem::replace(&mut self.items[index.idx], entry);
+
+                self.free_list_head = Some(index.idx);
+
                 if let Entry::Occupied {
-                    value: _,
-                    generation,
-                } = entry
+                    value,
+                    generation: _,
+                } = old_entry
                 {
-                    if &index.generation != generation {
-                        return None;
-                    }
-
-                    let entry = Entry::<T>::Free {
-                        next_free: self.free_list_head,
-                    };
-
-                    let old_entry = core::mem::replace(&mut self.items[index.idx], entry);
-
-                    self.free_list_head = Some(index.idx);
-
-                    if let Entry::Occupied {
-                        value,
-                        generation: _,
-                    } = old_entry
-                    {
-                        return Some(value);
-                    }
+                    return Some(value);
                 }
             }
 
@@ -206,11 +210,9 @@ pub mod arena {
         }
 
         pub fn get_mut(&mut self, index: &Index) -> Option<&mut T> {
-            if let Some(entry) = self.items.get_mut(index.idx) {
-                if let Entry::Occupied { value, generation } = entry {
-                    if &index.generation == generation {
-                        return Some(value);
-                    }
+            if let Some(Entry::Occupied { value, generation }) = self.items.get_mut(index.idx) {
+                if &index.generation == generation {
+                    return Some(value);
                 }
             }
 
@@ -218,11 +220,9 @@ pub mod arena {
         }
 
         pub fn get(&self, index: &Index) -> Option<&T> {
-            if let Some(entry) = self.items.get(index.idx) {
-                if let Entry::Occupied { value, generation } = entry {
-                    if &index.generation == generation {
-                        return Some(value);
-                    }
+            if let Some(Entry::Occupied { value, generation }) = self.items.get(index.idx) {
+                if &index.generation == generation {
+                    return Some(value);
                 }
             }
 
@@ -413,7 +413,7 @@ pub mod list {
     //!     assert_eq!(list.pop_front().unwrap(), ele as i32);
     //! }
     //!
-    //! assert!(list.empty());
+    //! assert!(list.is_empty());
     //! assert_eq!(list.pop_front(), Err(ListError::ListEmpty));
     //!
     //! ```
@@ -472,6 +472,12 @@ pub mod list {
         }
     }
 
+    impl<T> Default for LinkedList<T> {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl<T> LinkedList<T> {
         pub fn new() -> Self {
             LinkedList {
@@ -495,7 +501,7 @@ pub mod list {
             self.len
         }
 
-        pub fn empty(&self) -> bool {
+        pub fn is_empty(&self) -> bool {
             self.head.is_none()
         }
 
@@ -599,7 +605,7 @@ pub mod list {
             }
 
             self.len -= 1;
-            return Ok(node.value);
+            Ok(node.value)
         }
 
         pub fn pop_back(&mut self) -> Result<T, ListError> {
@@ -618,7 +624,7 @@ pub mod list {
             }
 
             self.len -= 1;
-            return Ok(node.value);
+            Ok(node.value)
         }
 
         pub fn remove(&mut self, link: &Link) -> Result<T, ListError> {
@@ -647,12 +653,12 @@ pub mod list {
             next.prev = Some(prev_link);
 
             self.len -= 1;
-            return Ok(node.value);
+            Ok(node.value)
         }
 
         pub fn iter(&self) -> Iter<T> {
             Iter {
-                list: &self,
+                list: self,
                 current: self.head(),
             }
         }
@@ -663,7 +669,7 @@ pub mod list {
 
         fn next(&mut self) -> Option<Self::Item> {
             if let Some(link) = self.current {
-                if let Some(node) = self.list.get(&link).ok() {
+                if let Ok(node) = self.list.get(&link) {
                     self.current = node.next;
                     return Some(&node.value);
                 }
@@ -680,7 +686,7 @@ pub mod list {
         #[test]
         fn list_new() {
             let mut list = LinkedList::<i32>::new();
-            assert!(list.empty());
+            assert!(list.is_empty());
             assert!(list.full());
 
             assert_eq!(list.peek_front(), Err(ListError::ListEmpty));
@@ -693,7 +699,7 @@ pub mod list {
         fn list_with_capacity() {
             let capacity = 5;
             let mut list = LinkedList::<i32>::with_capacity(capacity);
-            assert!(list.empty());
+            assert!(list.is_empty());
             for _ in 0..capacity {
                 assert!(list.push_back(0).is_ok())
             }
@@ -746,7 +752,7 @@ pub mod list {
                 assert_eq!(list.pop_front().unwrap(), ele as i32);
             }
 
-            assert!(list.empty());
+            assert!(list.is_empty());
             assert_eq!(list.pop_front(), Err(ListError::ListEmpty));
         }
 
@@ -765,14 +771,14 @@ pub mod list {
                 assert_eq!(list.pop_back().unwrap(), ele as i32);
             }
 
-            assert!(list.empty());
+            assert!(list.is_empty());
             assert_eq!(list.pop_back(), Err(ListError::ListEmpty));
         }
 
         #[test]
         fn list_remove() {
             let mut list = LinkedList::<i32>::with_capacity(5);
-            assert!(list.empty());
+            assert!(list.is_empty());
 
             let link_0 = list.push_back(0).unwrap();
             let _link_1 = list.push_back(1).unwrap();
@@ -905,7 +911,7 @@ pub mod lrucache {
         /// cannot be fetched from the underlying storage, we return a "cache-broken" error.
         pub fn get(&self, key: &K) -> Result<&V, CacheError> {
             let link = self.block_refs.get(key).ok_or(CacheError::CacheMiss)?;
-            let node = self.blocks.get(&link).map_err(CacheError::CacheBroken)?;
+            let node = self.blocks.get(link).map_err(CacheError::CacheBroken)?;
             Ok(&node.value.value)
         }
 
