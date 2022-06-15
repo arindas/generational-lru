@@ -1,6 +1,5 @@
 # lrucache
-[![ci-tests](https://github.com/arindas/lrucache/actions/workflows/ci-tests.yml/badge.svg)](https://github.com/arindas/lrucache/actions/workflows/ci-tests.yml)
-[![clippy-check](https://github.com/arindas/lrucache/actions/workflows/clippy-check.yml/badge.svg)](https://github.com/arindas/lrucache/actions/workflows/clippy-check.yml)
+[![ci](https://github.com/arindas/lrucache/actions/workflows/ci.yml/badge.svg)](https://github.com/arindas/lrucache/actions/workflows/ci.yml)
 [![rustdoc](https://github.com/arindas/lrucache/actions/workflows/rustdoc.yml/badge.svg)](https://github.com/arindas/lrucache/actions/workflows/rustdoc.yml)
 
 Crate providing a 100% safe, generational arena based LRU cache implementation.
