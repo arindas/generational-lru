@@ -989,6 +989,12 @@
 <span id="984">984</span>
 <span id="985">985</span>
 <span id="986">986</span>
+<span id="987">987</span>
+<span id="988">988</span>
+<span id="989">989</span>
+<span id="990">990</span>
+<span id="991">991</span>
+<span id="992">992</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Crate providing a 100% safe, generational arena based LRUCache implementation.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Usage:</span>
@@ -1099,6 +1105,12 @@
         }
     }
 
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Arena</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
+            <span class="ident"><span class="self">Self</span>::new</span>()
+        }
+    }
+
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Arena</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
             <span class="ident">Arena</span> {
@@ -1165,31 +1177,29 @@
         }
 
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="kw-2">&amp;</span><span class="ident">Index</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entry</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">items</span>.<span class="ident">get</span>(<span class="ident">index</span>.<span class="ident">idx</span>) {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">Entry::Occupied</span> {
+                <span class="ident">value</span>: <span class="kw">_</span>,
+                <span class="ident">generation</span>,
+            }) <span class="op">=</span> <span class="self">self</span>.<span class="ident">items</span>.<span class="ident">get</span>(<span class="ident">index</span>.<span class="ident">idx</span>)
+            {
+                <span class="kw">if</span> <span class="kw-2">&amp;</span><span class="ident">index</span>.<span class="ident">generation</span> <span class="op">!</span><span class="op">=</span> <span class="ident">generation</span> {
+                    <span class="kw">return</span> <span class="prelude-val">None</span>;
+                }
+
+                <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">Entry</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::Free</span> {
+                    <span class="ident">next_free</span>: <span class="self">self</span>.<span class="ident">free_list_head</span>,
+                };
+
+                <span class="kw">let</span> <span class="ident">old_entry</span> <span class="op">=</span> <span class="ident">core::mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">items</span>[<span class="ident">index</span>.<span class="ident">idx</span>], <span class="ident">entry</span>);
+
+                <span class="self">self</span>.<span class="ident">free_list_head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">index</span>.<span class="ident">idx</span>);
+
                 <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Entry::Occupied</span> {
-                    <span class="ident">value</span>: <span class="kw">_</span>,
-                    <span class="ident">generation</span>,
-                } <span class="op">=</span> <span class="ident">entry</span>
+                    <span class="ident">value</span>,
+                    <span class="ident">generation</span>: <span class="kw">_</span>,
+                } <span class="op">=</span> <span class="ident">old_entry</span>
                 {
-                    <span class="kw">if</span> <span class="kw-2">&amp;</span><span class="ident">index</span>.<span class="ident">generation</span> <span class="op">!</span><span class="op">=</span> <span class="ident">generation</span> {
-                        <span class="kw">return</span> <span class="prelude-val">None</span>;
-                    }
-
-                    <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">Entry</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::Free</span> {
-                        <span class="ident">next_free</span>: <span class="self">self</span>.<span class="ident">free_list_head</span>,
-                    };
-
-                    <span class="kw">let</span> <span class="ident">old_entry</span> <span class="op">=</span> <span class="ident">core::mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">items</span>[<span class="ident">index</span>.<span class="ident">idx</span>], <span class="ident">entry</span>);
-
-                    <span class="self">self</span>.<span class="ident">free_list_head</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">index</span>.<span class="ident">idx</span>);
-
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Entry::Occupied</span> {
-                        <span class="ident">value</span>,
-                        <span class="ident">generation</span>: <span class="kw">_</span>,
-                    } <span class="op">=</span> <span class="ident">old_entry</span>
-                    {
-                        <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>);
-                    }
+                    <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>);
                 }
             }
 
@@ -1197,11 +1207,9 @@
         }
 
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="kw-2">&amp;</span><span class="ident">Index</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">T</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entry</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">items</span>.<span class="ident">get_mut</span>(<span class="ident">index</span>.<span class="ident">idx</span>) {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Entry::Occupied</span> { <span class="ident">value</span>, <span class="ident">generation</span> } <span class="op">=</span> <span class="ident">entry</span> {
-                    <span class="kw">if</span> <span class="kw-2">&amp;</span><span class="ident">index</span>.<span class="ident">generation</span> <span class="op">==</span> <span class="ident">generation</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>);
-                    }
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">Entry::Occupied</span> { <span class="ident">value</span>, <span class="ident">generation</span> }) <span class="op">=</span> <span class="self">self</span>.<span class="ident">items</span>.<span class="ident">get_mut</span>(<span class="ident">index</span>.<span class="ident">idx</span>) {
+                <span class="kw">if</span> <span class="kw-2">&amp;</span><span class="ident">index</span>.<span class="ident">generation</span> <span class="op">==</span> <span class="ident">generation</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>);
                 }
             }
 
@@ -1209,11 +1217,9 @@
         }
 
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="kw-2">&amp;</span><span class="ident">Index</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">T</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entry</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">items</span>.<span class="ident">get</span>(<span class="ident">index</span>.<span class="ident">idx</span>) {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Entry::Occupied</span> { <span class="ident">value</span>, <span class="ident">generation</span> } <span class="op">=</span> <span class="ident">entry</span> {
-                    <span class="kw">if</span> <span class="kw-2">&amp;</span><span class="ident">index</span>.<span class="ident">generation</span> <span class="op">==</span> <span class="ident">generation</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>);
-                    }
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">Entry::Occupied</span> { <span class="ident">value</span>, <span class="ident">generation</span> }) <span class="op">=</span> <span class="self">self</span>.<span class="ident">items</span>.<span class="ident">get</span>(<span class="ident">index</span>.<span class="ident">idx</span>) {
+                <span class="kw">if</span> <span class="kw-2">&amp;</span><span class="ident">index</span>.<span class="ident">generation</span> <span class="op">==</span> <span class="ident">generation</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>);
                 }
             }
 
@@ -1404,7 +1410,7 @@
     <span class="doccomment">//!     assert_eq!(list.pop_front().unwrap(), ele as i32);</span>
     <span class="doccomment">//! }</span>
     <span class="doccomment">//!</span>
-    <span class="doccomment">//! assert!(list.empty());</span>
+    <span class="doccomment">//! assert!(list.is_empty());</span>
     <span class="doccomment">//! assert_eq!(list.pop_front(), Err(ListError::ListEmpty));</span>
     <span class="doccomment">//!</span>
     <span class="doccomment">//! ```</span>
@@ -1463,6 +1469,12 @@
         }
     }
 
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
+            <span class="ident"><span class="self">Self</span>::new</span>()
+        }
+    }
+
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
             <span class="ident">LinkedList</span> {
@@ -1486,7 +1498,7 @@
             <span class="self">self</span>.<span class="ident">len</span>
         }
 
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
             <span class="self">self</span>.<span class="ident">head</span>.<span class="ident">is_none</span>()
         }
 
@@ -1590,7 +1602,7 @@
             }
 
             <span class="self">self</span>.<span class="ident">len</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">node</span>.<span class="ident">value</span>);
+            <span class="prelude-val">Ok</span>(<span class="ident">node</span>.<span class="ident">value</span>)
         }
 
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_back</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">ListError</span><span class="op">&gt;</span> {
@@ -1609,7 +1621,7 @@
             }
 
             <span class="self">self</span>.<span class="ident">len</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">node</span>.<span class="ident">value</span>);
+            <span class="prelude-val">Ok</span>(<span class="ident">node</span>.<span class="ident">value</span>)
         }
 
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">link</span>: <span class="kw-2">&amp;</span><span class="ident">Link</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">ListError</span><span class="op">&gt;</span> {
@@ -1638,12 +1650,12 @@
             <span class="ident">next</span>.<span class="ident">prev</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">prev_link</span>);
 
             <span class="self">self</span>.<span class="ident">len</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">node</span>.<span class="ident">value</span>);
+            <span class="prelude-val">Ok</span>(<span class="ident">node</span>.<span class="ident">value</span>)
         }
 
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Iter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
             <span class="ident">Iter</span> {
-                <span class="ident">list</span>: <span class="kw-2">&amp;</span><span class="self">self</span>,
+                <span class="ident">list</span>: <span class="self">self</span>,
                 <span class="ident">current</span>: <span class="self">self</span>.<span class="ident">head</span>(),
             }
         }
@@ -1654,7 +1666,7 @@
 
         <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">link</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">current</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">node</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">list</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">link</span>).<span class="ident">ok</span>() {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">node</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">list</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">link</span>) {
                     <span class="self">self</span>.<span class="ident">current</span> <span class="op">=</span> <span class="ident">node</span>.<span class="ident">next</span>;
                     <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">node</span>.<span class="ident">value</span>);
                 }
@@ -1671,7 +1683,7 @@
         <span class="attribute">#[<span class="ident">test</span>]</span>
         <span class="kw">fn</span> <span class="ident">list_new</span>() {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">list</span> <span class="op">=</span> <span class="ident">LinkedList</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span><span class="ident">::new</span>();
-            <span class="macro">assert!</span>(<span class="ident">list</span>.<span class="ident">empty</span>());
+            <span class="macro">assert!</span>(<span class="ident">list</span>.<span class="ident">is_empty</span>());
             <span class="macro">assert!</span>(<span class="ident">list</span>.<span class="ident">full</span>());
 
             <span class="macro">assert_eq!</span>(<span class="ident">list</span>.<span class="ident">peek_front</span>(), <span class="prelude-val">Err</span>(<span class="ident">ListError::ListEmpty</span>));
@@ -1684,7 +1696,7 @@
         <span class="kw">fn</span> <span class="ident">list_with_capacity</span>() {
             <span class="kw">let</span> <span class="ident">capacity</span> <span class="op">=</span> <span class="number">5</span>;
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">list</span> <span class="op">=</span> <span class="ident">LinkedList</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span><span class="ident">::with_capacity</span>(<span class="ident">capacity</span>);
-            <span class="macro">assert!</span>(<span class="ident">list</span>.<span class="ident">empty</span>());
+            <span class="macro">assert!</span>(<span class="ident">list</span>.<span class="ident">is_empty</span>());
             <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">capacity</span> {
                 <span class="macro">assert!</span>(<span class="ident">list</span>.<span class="ident">push_back</span>(<span class="number">0</span>).<span class="ident">is_ok</span>())
             }
@@ -1737,7 +1749,7 @@
                 <span class="macro">assert_eq!</span>(<span class="ident">list</span>.<span class="ident">pop_front</span>().<span class="ident">unwrap</span>(), <span class="ident">ele</span> <span class="kw">as</span> <span class="ident">i32</span>);
             }
 
-            <span class="macro">assert!</span>(<span class="ident">list</span>.<span class="ident">empty</span>());
+            <span class="macro">assert!</span>(<span class="ident">list</span>.<span class="ident">is_empty</span>());
             <span class="macro">assert_eq!</span>(<span class="ident">list</span>.<span class="ident">pop_front</span>(), <span class="prelude-val">Err</span>(<span class="ident">ListError::ListEmpty</span>));
         }
 
@@ -1756,14 +1768,14 @@
                 <span class="macro">assert_eq!</span>(<span class="ident">list</span>.<span class="ident">pop_back</span>().<span class="ident">unwrap</span>(), <span class="ident">ele</span> <span class="kw">as</span> <span class="ident">i32</span>);
             }
 
-            <span class="macro">assert!</span>(<span class="ident">list</span>.<span class="ident">empty</span>());
+            <span class="macro">assert!</span>(<span class="ident">list</span>.<span class="ident">is_empty</span>());
             <span class="macro">assert_eq!</span>(<span class="ident">list</span>.<span class="ident">pop_back</span>(), <span class="prelude-val">Err</span>(<span class="ident">ListError::ListEmpty</span>));
         }
 
         <span class="attribute">#[<span class="ident">test</span>]</span>
         <span class="kw">fn</span> <span class="ident">list_remove</span>() {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">list</span> <span class="op">=</span> <span class="ident">LinkedList</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span><span class="ident">::with_capacity</span>(<span class="number">5</span>);
-            <span class="macro">assert!</span>(<span class="ident">list</span>.<span class="ident">empty</span>());
+            <span class="macro">assert!</span>(<span class="ident">list</span>.<span class="ident">is_empty</span>());
 
             <span class="kw">let</span> <span class="ident">link_0</span> <span class="op">=</span> <span class="ident">list</span>.<span class="ident">push_back</span>(<span class="number">0</span>).<span class="ident">unwrap</span>();
             <span class="kw">let</span> <span class="ident">_link_1</span> <span class="op">=</span> <span class="ident">list</span>.<span class="ident">push_back</span>(<span class="number">1</span>).<span class="ident">unwrap</span>();
@@ -1896,7 +1908,7 @@
         <span class="doccomment">/// cannot be fetched from the underlying storage, we return a &quot;cache-broken&quot; error.</span>
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">K</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">V</span>, <span class="ident">CacheError</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">link</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">block_refs</span>.<span class="ident">get</span>(<span class="ident">key</span>).<span class="ident">ok_or</span>(<span class="ident">CacheError::CacheMiss</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">blocks</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">link</span>).<span class="ident">map_err</span>(<span class="ident">CacheError::CacheBroken</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">blocks</span>.<span class="ident">get</span>(<span class="ident">link</span>).<span class="ident">map_err</span>(<span class="ident">CacheError::CacheBroken</span>)<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="ident">node</span>.<span class="ident">value</span>.<span class="ident">value</span>)
         }
 
