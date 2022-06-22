@@ -327,6 +327,8 @@ pub mod arena {
                     })
                 )
             }
+            assert_eq!(arena.capacity(), old_cap + to_reserve);
+            assert_eq!(arena.insert(0), Err(ArenaOOM {}));
         }
 
         #[test]
