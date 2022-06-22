@@ -995,6 +995,8 @@
 <span id="990">990</span>
 <span id="991">991</span>
 <span id="992">992</span>
+<span id="993">993</span>
+<span id="994">994</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Crate providing a 100% safe, generational arena based LRUCache implementation.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Usage:</span>
@@ -1324,6 +1326,8 @@
                     })
                 )
             }
+            <span class="macro">assert_eq!</span>(<span class="ident">arena</span>.<span class="ident">capacity</span>(), <span class="ident">old_cap</span> <span class="op">+</span> <span class="ident">to_reserve</span>);
+            <span class="macro">assert_eq!</span>(<span class="ident">arena</span>.<span class="ident">insert</span>(<span class="number">0</span>), <span class="prelude-val">Err</span>(<span class="ident">ArenaOOM</span> {}));
         }
 
         <span class="attribute">#[<span class="ident">test</span>]</span>
