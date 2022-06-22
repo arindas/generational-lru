@@ -1,5 +1,6 @@
 # lrucache
 [![ci](https://github.com/arindas/lrucache/actions/workflows/ci.yml/badge.svg)](https://github.com/arindas/lrucache/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/arindas/lrucache/branch/main/graph/badge.svg?token=W2BBX6MPW8)](https://codecov.io/gh/arindas/lrucache)
 [![rustdoc](https://github.com/arindas/lrucache/actions/workflows/rustdoc.yml/badge.svg)](https://github.com/arindas/lrucache/actions/workflows/rustdoc.yml)
 
 Crate providing a 100% safe, generational arena based LRU cache implementation.
