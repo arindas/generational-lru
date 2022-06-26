@@ -2,7 +2,7 @@
 //!
 //! Usage:
 //! ```
-//! use lrucache::lrucache::{LRUCache, CacheError};
+//! use generational_lru::lrucache::{LRUCache, CacheError};
 //!
 //! let capacity = 5;
 //!
@@ -49,7 +49,7 @@ pub mod arena {
     //!
     //! Usage:
     //! ```
-    //! use lrucache::arena::Arena;
+    //! use generational_lru::arena::Arena;
     //!
     //! let mut arena = Arena::<i32>::with_capacity(10); // create arena
     //! let index = arena.insert(78).unwrap(); // allocate new element in arena
@@ -388,7 +388,7 @@ pub mod list {
     //!
     //! Usage:
     //! ```
-    //! use lrucache::list::*;
+    //! use generational_lru::list::*;
     //!
     //! let capacity = 10;
     //! let mut list = LinkedList::<i32>::with_capacity(capacity);
@@ -818,7 +818,7 @@ pub mod lrucache {
     //!
     //! Usage:
     //! ```
-    //! use lrucache::lrucache::{LRUCache, CacheError};
+    //! use generational_lru::lrucache::{LRUCache, CacheError};
     //!
     //! let capacity = 5;
     //!

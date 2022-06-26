@@ -1,5 +1,11 @@
 [package]
-name = "lrucache"
+name = "generational-lru"
+description = "A generational arena based LRU Cache implementation in 100% safe rust."
+repository = "https://github.com/arindas/lrucache"
+license = "MIT"
+keywords = ["lru", "lru-cache", "generational-arena"]
+categories = ["algorithms", "caching"]
+exclude = [".github/"]
 version = "0.1.0"
 edition = "2021"
 

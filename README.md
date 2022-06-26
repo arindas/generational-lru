@@ -6,7 +6,7 @@
 Crate providing a 100% safe, generational arena based LRU cache implementation.
 
 ```rust
-use lrucache::lrucache::{LRUCache, CacheError};
+use generational_lru::lrucache::{LRUCache, CacheError};
 
 let capacity = 5;
 
@@ -52,7 +52,7 @@ Refer to [API documentation](https://arindas.github.io/lrucache/lrucache) for mo
 This is a library crate. You may include it in your `Cargo.toml` as follows:
 ```toml
 [dependencies]
-lrucache = { git = "https://github.com/arindas/lrucache" }
+generational-lru = "0.1.0"
 ```
 
 ## License
