@@ -1,7 +1,7 @@
 # lrucache
-[![ci](https://github.com/arindas/lrucache/actions/workflows/ci.yml/badge.svg)](https://github.com/arindas/lrucache/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/arindas/lrucache/branch/main/graph/badge.svg?token=W2BBX6MPW8)](https://codecov.io/gh/arindas/lrucache)
-[![rustdoc](https://github.com/arindas/lrucache/actions/workflows/rustdoc.yml/badge.svg)](https://github.com/arindas/lrucache/actions/workflows/rustdoc.yml)
+[![ci](https://github.com/arindas/generational-lru/actions/workflows/ci.yml/badge.svg)](https://github.com/arindas/generational-lru/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/arindas/generational-lru/branch/main/graph/badge.svg?token=W2BBX6MPW8)](https://codecov.io/gh/arindas/lrucache)
+[![rustdoc](https://github.com/arindas/generational-lru/actions/workflows/rustdoc.yml/badge.svg)](https://github.com/arindas/generational-lru/actions/workflows/rustdoc.yml)
 
 Crate providing a 100% safe, generational arena based LRU cache implementation.
 
@@ -46,7 +46,7 @@ assert!(matches!(
 
 ```
 
-Refer to [API documentation](https://arindas.github.io/lrucache/lrucache) for more details.
+Refer to [API documentation](https://arindas.github.io/generational-lru/generational_lru) for more details.
 
 ## Usage
 This is a library crate. You may include it in your `Cargo.toml` as follows:
