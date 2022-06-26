@@ -507,7 +507,7 @@ pub mod list {
             self.head.is_none()
         }
 
-        pub fn full(&self) -> bool {
+        pub fn is_full(&self) -> bool {
             self.len == self.arena.capacity()
         }
 
@@ -689,7 +689,7 @@ pub mod list {
         fn list_new() {
             let mut list = LinkedList::<i32>::new();
             assert!(list.is_empty());
-            assert!(list.full());
+            assert!(list.is_full());
 
             assert_eq!(list.peek_front(), Err(ListError::ListEmpty));
             assert_eq!(list.peek_back(), Err(ListError::ListEmpty));
@@ -705,7 +705,7 @@ pub mod list {
             for _ in 0..capacity {
                 assert!(list.push_back(0).is_ok())
             }
-            assert!(list.full());
+            assert!(list.is_full());
             assert_eq!(list.push_back(0), Err(ListError::ListOOM(ArenaOOM {})));
         }
 
@@ -788,7 +788,7 @@ pub mod list {
             let _link_3 = list.push_back(3).unwrap();
             let link_4 = list.push_back(4).unwrap();
 
-            assert!(list.full());
+            assert!(list.is_full());
 
             assert_eq!(list.peek_front().unwrap(), &0);
             assert_eq!(list.peek_back().unwrap(), &4);
@@ -935,7 +935,7 @@ pub mod lrucache {
                 remove_result?;
             }
 
-            if self.blocks.full() {
+            if self.blocks.is_full() {
                 let block = self.blocks.pop_front().map_err(CacheError::CacheBroken)?;
                 self.block_refs.remove(&block.key);
             }
