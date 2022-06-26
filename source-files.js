@@ -1,3 +1,3 @@
 var N = null;var sourcesIndex = {};
-sourcesIndex["lrucache"] = {"name":"","files":["lib.rs"]};
+sourcesIndex["generational_lru"] = {"name":"","files":["lib.rs"]};
 createSourceSidebar();

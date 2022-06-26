@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["lrucache"];
+window.ALL_CRATES = ["generational_lru"];
