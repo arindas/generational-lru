@@ -2,6 +2,7 @@
 [![ci](https://github.com/arindas/generational-lru/actions/workflows/ci.yml/badge.svg)](https://github.com/arindas/generational-lru/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/arindas/generational-lru/branch/main/graph/badge.svg?token=W2BBX6MPW8)](https://codecov.io/gh/arindas/generational-lru)
 [![rustdoc](https://github.com/arindas/generational-lru/actions/workflows/rustdoc.yml/badge.svg)](https://github.com/arindas/generational-lru/actions/workflows/rustdoc.yml)
+[![Crates.io](https://img.shields.io/crates/v/generational-lru)](https://crates.io/crates/generational-lru)
 
 Crate providing a 100% safe, generational arena based LRU cache implementation.
 
