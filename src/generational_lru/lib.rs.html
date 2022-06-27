@@ -997,6 +997,124 @@
 <span id="992">992</span>
 <span id="993">993</span>
 <span id="994">994</span>
+<span id="995">995</span>
+<span id="996">996</span>
+<span id="997">997</span>
+<span id="998">998</span>
+<span id="999">999</span>
+<span id="1000">1000</span>
+<span id="1001">1001</span>
+<span id="1002">1002</span>
+<span id="1003">1003</span>
+<span id="1004">1004</span>
+<span id="1005">1005</span>
+<span id="1006">1006</span>
+<span id="1007">1007</span>
+<span id="1008">1008</span>
+<span id="1009">1009</span>
+<span id="1010">1010</span>
+<span id="1011">1011</span>
+<span id="1012">1012</span>
+<span id="1013">1013</span>
+<span id="1014">1014</span>
+<span id="1015">1015</span>
+<span id="1016">1016</span>
+<span id="1017">1017</span>
+<span id="1018">1018</span>
+<span id="1019">1019</span>
+<span id="1020">1020</span>
+<span id="1021">1021</span>
+<span id="1022">1022</span>
+<span id="1023">1023</span>
+<span id="1024">1024</span>
+<span id="1025">1025</span>
+<span id="1026">1026</span>
+<span id="1027">1027</span>
+<span id="1028">1028</span>
+<span id="1029">1029</span>
+<span id="1030">1030</span>
+<span id="1031">1031</span>
+<span id="1032">1032</span>
+<span id="1033">1033</span>
+<span id="1034">1034</span>
+<span id="1035">1035</span>
+<span id="1036">1036</span>
+<span id="1037">1037</span>
+<span id="1038">1038</span>
+<span id="1039">1039</span>
+<span id="1040">1040</span>
+<span id="1041">1041</span>
+<span id="1042">1042</span>
+<span id="1043">1043</span>
+<span id="1044">1044</span>
+<span id="1045">1045</span>
+<span id="1046">1046</span>
+<span id="1047">1047</span>
+<span id="1048">1048</span>
+<span id="1049">1049</span>
+<span id="1050">1050</span>
+<span id="1051">1051</span>
+<span id="1052">1052</span>
+<span id="1053">1053</span>
+<span id="1054">1054</span>
+<span id="1055">1055</span>
+<span id="1056">1056</span>
+<span id="1057">1057</span>
+<span id="1058">1058</span>
+<span id="1059">1059</span>
+<span id="1060">1060</span>
+<span id="1061">1061</span>
+<span id="1062">1062</span>
+<span id="1063">1063</span>
+<span id="1064">1064</span>
+<span id="1065">1065</span>
+<span id="1066">1066</span>
+<span id="1067">1067</span>
+<span id="1068">1068</span>
+<span id="1069">1069</span>
+<span id="1070">1070</span>
+<span id="1071">1071</span>
+<span id="1072">1072</span>
+<span id="1073">1073</span>
+<span id="1074">1074</span>
+<span id="1075">1075</span>
+<span id="1076">1076</span>
+<span id="1077">1077</span>
+<span id="1078">1078</span>
+<span id="1079">1079</span>
+<span id="1080">1080</span>
+<span id="1081">1081</span>
+<span id="1082">1082</span>
+<span id="1083">1083</span>
+<span id="1084">1084</span>
+<span id="1085">1085</span>
+<span id="1086">1086</span>
+<span id="1087">1087</span>
+<span id="1088">1088</span>
+<span id="1089">1089</span>
+<span id="1090">1090</span>
+<span id="1091">1091</span>
+<span id="1092">1092</span>
+<span id="1093">1093</span>
+<span id="1094">1094</span>
+<span id="1095">1095</span>
+<span id="1096">1096</span>
+<span id="1097">1097</span>
+<span id="1098">1098</span>
+<span id="1099">1099</span>
+<span id="1100">1100</span>
+<span id="1101">1101</span>
+<span id="1102">1102</span>
+<span id="1103">1103</span>
+<span id="1104">1104</span>
+<span id="1105">1105</span>
+<span id="1106">1106</span>
+<span id="1107">1107</span>
+<span id="1108">1108</span>
+<span id="1109">1109</span>
+<span id="1110">1110</span>
+<span id="1111">1111</span>
+<span id="1112">1112</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Crate providing a 100% safe, generational arena based LRUCache implementation.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Usage:</span>
@@ -1006,7 +1124,7 @@
 <span class="doccomment">//! let capacity = 5;</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! let mut lru_cache = LRUCache::&lt;i32, i32&gt;::with_capacity(capacity);</span>
-<span class="doccomment">//! assert_eq!(lru_cache.get(&amp;0), Err(CacheError::CacheMiss));</span>
+<span class="doccomment">//! assert_eq!(lru_cache.query(&amp;0), Err(CacheError::CacheMiss));</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! for ele in 0..capacity {</span>
 <span class="doccomment">//!     let x = ele as i32;</span>
@@ -1015,20 +1133,20 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! for ele in 0..capacity {</span>
 <span class="doccomment">//!     let x = ele as i32;</span>
-<span class="doccomment">//!     assert_eq!(lru_cache.get(&amp;x), Ok(&amp;x));</span>
+<span class="doccomment">//!     assert_eq!(lru_cache.query(&amp;x), Ok(&amp;x));</span>
 <span class="doccomment">//! }</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! let x = capacity as i32;</span>
 <span class="doccomment">//! assert!(lru_cache.insert(x, x).is_ok());</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! assert_eq!(lru_cache.get(&amp;x), Ok(&amp;x));</span>
+<span class="doccomment">//! assert_eq!(lru_cache.query(&amp;x), Ok(&amp;x));</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! assert_eq!(lru_cache.get(&amp;0), Err(CacheError::CacheMiss));</span>
+<span class="doccomment">//! assert_eq!(lru_cache.query(&amp;0), Err(CacheError::CacheMiss));</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! let x = capacity as i32 / 2;</span>
 <span class="doccomment">//! assert_eq!(lru_cache.remove(&amp;x), Ok(x));</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! assert_eq!(lru_cache.get(&amp;x), Err(CacheError::CacheMiss));</span>
+<span class="doccomment">//! assert_eq!(lru_cache.query(&amp;x), Err(CacheError::CacheMiss));</span>
 <span class="doccomment">//! assert_eq!(lru_cache.remove(&amp;x), Err(CacheError::CacheMiss));</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! // zero capacity LRUCache is unusable</span>
@@ -1522,6 +1640,11 @@
             <span class="prelude-val">Ok</span>(<span class="ident">node</span>)
         }
 
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_mut_value</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">link</span>: <span class="kw-2">&amp;</span><span class="ident">Link</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">T</span>, <span class="ident">ListError</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_mut</span>(<span class="ident">link</span>)<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;mut</span> <span class="ident">node</span>.<span class="ident">value</span>)
+        }
+
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">link</span>: <span class="kw-2">&amp;</span><span class="ident">Link</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Node</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">ListError</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">arena</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">link</span>.<span class="ident">index</span>).<span class="ident">ok_or</span>(<span class="ident">ListError::LinkBroken</span>)<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(<span class="ident">node</span>)
@@ -1655,6 +1778,48 @@
 
             <span class="self">self</span>.<span class="ident">len</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
             <span class="prelude-val">Ok</span>(<span class="ident">node</span>.<span class="ident">value</span>)
+        }
+
+        <span class="doccomment">/// Re-arranges the nodes in the linked list to make the node pointed to by the</span>
+        <span class="doccomment">/// given Link the tail node.</span>
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reposition_to_tail</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">link</span>: <span class="kw-2">&amp;</span><span class="ident">Link</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ListError</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">head</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">head</span>.<span class="ident">ok_or</span>(<span class="ident">ListError::ListEmpty</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">tail</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tail</span>.<span class="ident">ok_or</span>(<span class="ident">ListError::ListEmpty</span>)<span class="question-mark">?</span>;
+
+            <span class="kw">if</span> <span class="ident">link</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">tail</span> {
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+            }
+
+            <span class="comment">// list has &gt;= 2 nodes</span>
+
+            <span class="kw">let</span> <span class="ident">head_node</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">head</span>)<span class="question-mark">?</span>;
+            <span class="kw">if</span> <span class="ident">link</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">head</span> {
+                <span class="self">self</span>.<span class="ident">head</span> <span class="op">=</span> <span class="ident">head_node</span>.<span class="ident">next</span>;
+            }
+
+            <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_mut</span>(<span class="ident">link</span>)<span class="question-mark">?</span>;
+
+            <span class="kw">let</span> <span class="ident">prev_link</span> <span class="op">=</span> <span class="ident">node</span>.<span class="ident">prev</span>;
+            <span class="kw">let</span> <span class="ident">next_link</span> <span class="op">=</span> <span class="ident">node</span>.<span class="ident">next</span>;
+
+            <span class="ident">node</span>.<span class="ident">prev</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">tail</span>);
+            <span class="ident">node</span>.<span class="ident">next</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">link</span>) <span class="op">=</span> <span class="ident">prev_link</span> {
+                <span class="kw">let</span> <span class="ident">prev</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">link</span>)<span class="question-mark">?</span>;
+                <span class="ident">prev</span>.<span class="ident">next</span> <span class="op">=</span> <span class="ident">next_link</span>;
+            }
+
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">link</span>) <span class="op">=</span> <span class="ident">next_link</span> {
+                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">link</span>)<span class="question-mark">?</span>;
+                <span class="ident">next</span>.<span class="ident">prev</span> <span class="op">=</span> <span class="ident">prev_link</span>;
+            }
+
+            <span class="kw">let</span> <span class="ident">tail_node</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">tail</span>)<span class="question-mark">?</span>;
+            <span class="ident">tail_node</span>.<span class="ident">next</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">link</span>);
+            <span class="self">self</span>.<span class="ident">tail</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">link</span>);
+
+            <span class="prelude-val">Ok</span>(())
         }
 
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Iter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
@@ -1809,6 +1974,56 @@
 
             <span class="macro">assert!</span>(<span class="ident">list</span>.<span class="ident">iter</span>().<span class="ident">eq</span>([<span class="number">1</span>, <span class="number">3</span>].<span class="ident">iter</span>()));
         }
+
+        <span class="attribute">#[<span class="ident">test</span>]</span>
+        <span class="kw">fn</span> <span class="ident">list_reposition_to_tail</span>() {
+            <span class="kw">let</span> <span class="ident">capacity</span> <span class="op">=</span> <span class="number">5</span>;
+
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">list</span> <span class="op">=</span> <span class="ident">LinkedList</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span><span class="ident">::with_capacity</span>(<span class="ident">capacity</span>);
+            <span class="macro">assert!</span>(<span class="ident">list</span>.<span class="ident">is_empty</span>());
+
+            <span class="kw">for</span> <span class="ident">ele</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">capacity</span> {
+                <span class="ident">list</span>.<span class="ident">push_back</span>(<span class="ident">ele</span> <span class="kw">as</span> <span class="ident">i32</span>).<span class="ident">unwrap</span>();
+            }
+
+            <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..(<span class="ident">capacity</span> <span class="op">/</span> <span class="number">2</span>) {
+                <span class="ident">list</span>.<span class="ident">reposition_to_tail</span>(<span class="kw-2">&amp;</span><span class="ident">list</span>.<span class="ident">head</span>().<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>();
+            }
+
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span> <span class="op">=</span> <span class="number">0</span>;
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lh</span> <span class="op">=</span> <span class="number">0</span> <span class="kw">as</span> <span class="ident">i32</span>;
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rh</span> <span class="op">=</span> <span class="ident">capacity</span> <span class="kw">as</span> <span class="ident">i32</span> <span class="op">/</span> <span class="number">2</span>;
+            <span class="kw">for</span> <span class="ident">ele</span> <span class="kw">in</span> <span class="ident">list</span>.<span class="ident">iter</span>() {
+                <span class="kw">if</span> <span class="ident">i</span> <span class="op">&lt;</span><span class="op">=</span> (<span class="ident">capacity</span> <span class="op">/</span> <span class="number">2</span>) {
+                    <span class="macro">assert_eq!</span>(<span class="ident">ele</span>, <span class="kw-2">&amp;</span><span class="ident">rh</span>);
+                    <span class="ident">rh</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                } <span class="kw">else</span> {
+                    <span class="macro">assert_eq!</span>(<span class="ident">ele</span>, <span class="kw-2">&amp;</span><span class="ident">lh</span>);
+                    <span class="ident">lh</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                }
+                <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>
+            }
+
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">list</span> <span class="op">=</span> <span class="ident">LinkedList</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span><span class="ident">::with_capacity</span>(<span class="number">2</span>);
+            <span class="kw">let</span> <span class="ident">link_0</span> <span class="op">=</span> <span class="ident">list</span>.<span class="ident">push_back</span>(<span class="number">0</span>).<span class="ident">unwrap</span>();
+            <span class="ident">list</span>.<span class="ident">reposition_to_tail</span>(<span class="kw-2">&amp;</span><span class="ident">link_0</span>).<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="ident">link_0</span>), <span class="ident">list</span>.<span class="ident">head</span>());
+            <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="ident">link_0</span>), <span class="ident">list</span>.<span class="ident">tail</span>());
+
+            <span class="kw">let</span> <span class="ident">link_1</span> <span class="op">=</span> <span class="ident">list</span>.<span class="ident">push_back</span>(<span class="number">1</span>).<span class="ident">unwrap</span>();
+
+            <span class="ident">list</span>.<span class="ident">reposition_to_tail</span>(<span class="kw-2">&amp;</span><span class="ident">link_0</span>).<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(<span class="ident">list</span>.<span class="ident">get_mut_value</span>(<span class="kw-2">&amp;</span><span class="ident">link_0</span>), <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;mut</span> <span class="number">0</span>));
+
+            <span class="macro">assert_eq!</span>(<span class="ident">list</span>.<span class="ident">head</span>(), <span class="prelude-val">Some</span>(<span class="ident">link_1</span>));
+            <span class="macro">assert_eq!</span>(<span class="ident">list</span>.<span class="ident">tail</span>(), <span class="prelude-val">Some</span>(<span class="ident">link_0</span>));
+
+            <span class="ident">list</span>.<span class="ident">reserve</span>(<span class="number">1</span>);
+            <span class="ident">list</span>.<span class="ident">push_back</span>(<span class="number">2</span>).<span class="ident">unwrap</span>();
+            <span class="ident">list</span>.<span class="ident">reposition_to_tail</span>(<span class="kw-2">&amp;</span><span class="ident">link_0</span>).<span class="ident">unwrap</span>();
+
+            <span class="macro">assert!</span>(<span class="ident">list</span>.<span class="ident">iter</span>().<span class="ident">eq</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">0</span>].<span class="ident">iter</span>()));
+        }
     }
 }
 
@@ -1822,7 +2037,7 @@
     <span class="doccomment">//! let capacity = 5;</span>
     <span class="doccomment">//!</span>
     <span class="doccomment">//! let mut lru_cache = LRUCache::&lt;i32, i32&gt;::with_capacity(capacity);</span>
-    <span class="doccomment">//! assert_eq!(lru_cache.get(&amp;0), Err(CacheError::CacheMiss));</span>
+    <span class="doccomment">//! assert_eq!(lru_cache.query(&amp;0), Err(CacheError::CacheMiss));</span>
     <span class="doccomment">//!</span>
     <span class="doccomment">//! for ele in 0..capacity {</span>
     <span class="doccomment">//!     let x = ele as i32;</span>
@@ -1831,20 +2046,20 @@
     <span class="doccomment">//!</span>
     <span class="doccomment">//! for ele in 0..capacity {</span>
     <span class="doccomment">//!     let x = ele as i32;</span>
-    <span class="doccomment">//!     assert_eq!(lru_cache.get(&amp;x), Ok(&amp;x));</span>
+    <span class="doccomment">//!     assert_eq!(lru_cache.query(&amp;x), Ok(&amp;x));</span>
     <span class="doccomment">//! }</span>
     <span class="doccomment">//!</span>
     <span class="doccomment">//! let x = capacity as i32;</span>
     <span class="doccomment">//! assert!(lru_cache.insert(x, x).is_ok());</span>
     <span class="doccomment">//!</span>
-    <span class="doccomment">//! assert_eq!(lru_cache.get(&amp;x), Ok(&amp;x));</span>
+    <span class="doccomment">//! assert_eq!(lru_cache.query(&amp;x), Ok(&amp;x));</span>
     <span class="doccomment">//!</span>
-    <span class="doccomment">//! assert_eq!(lru_cache.get(&amp;0), Err(CacheError::CacheMiss));</span>
+    <span class="doccomment">//! assert_eq!(lru_cache.query(&amp;0), Err(CacheError::CacheMiss));</span>
     <span class="doccomment">//!</span>
     <span class="doccomment">//! let x = capacity as i32 / 2;</span>
     <span class="doccomment">//! assert_eq!(lru_cache.remove(&amp;x), Ok(x));</span>
     <span class="doccomment">//!</span>
-    <span class="doccomment">//! assert_eq!(lru_cache.get(&amp;x), Err(CacheError::CacheMiss));</span>
+    <span class="doccomment">//! assert_eq!(lru_cache.query(&amp;x), Err(CacheError::CacheMiss));</span>
     <span class="doccomment">//! assert_eq!(lru_cache.remove(&amp;x), Err(CacheError::CacheMiss));</span>
     <span class="doccomment">//!</span>
     <span class="doccomment">//! // zero capacity LRUCache is unusable</span>
@@ -1910,8 +2125,11 @@
         <span class="doccomment">/// Returns a reference to the value associated with the given key. If the key is not</span>
         <span class="doccomment">/// present in the cache, we return a &quot;cache-miss&quot; error. If the entry is found but</span>
         <span class="doccomment">/// cannot be fetched from the underlying storage, we return a &quot;cache-broken&quot; error.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">K</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">V</span>, <span class="ident">CacheError</span><span class="op">&gt;</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">query</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">K</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">V</span>, <span class="ident">CacheError</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">link</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">block_refs</span>.<span class="ident">get</span>(<span class="ident">key</span>).<span class="ident">ok_or</span>(<span class="ident">CacheError::CacheMiss</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.<span class="ident">blocks</span>
+                .<span class="ident">reposition_to_tail</span>(<span class="ident">link</span>)
+                .<span class="ident">map_err</span>(<span class="ident">CacheError::CacheBroken</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">blocks</span>.<span class="ident">get</span>(<span class="ident">link</span>).<span class="ident">map_err</span>(<span class="ident">CacheError::CacheBroken</span>)<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="ident">node</span>.<span class="ident">value</span>.<span class="ident">value</span>)
         }
@@ -1929,9 +2147,16 @@
         <span class="doccomment">/// Inserts a new key value pair into this cache. If this cache is full, the least</span>
         <span class="doccomment">/// recently used entry is removed.</span>
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="ident">K</span>, <span class="ident">value</span>: <span class="ident">V</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CacheError</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">remove_result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>);
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">CacheError::CacheBroken</span>(<span class="kw">_</span>)) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">remove_result</span> {
-                <span class="ident">remove_result</span><span class="question-mark">?</span>;
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">link</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">block_refs</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
+                <span class="self">self</span>.<span class="ident">blocks</span>
+                    .<span class="ident">reposition_to_tail</span>(<span class="ident">link</span>)
+                    .<span class="ident">map_err</span>(<span class="ident">CacheError::CacheBroken</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">block_ref</span> <span class="op">=</span> <span class="self">self</span>
+                    .<span class="ident">blocks</span>
+                    .<span class="ident">get_mut_value</span>(<span class="ident">link</span>)
+                    .<span class="ident">map_err</span>(<span class="ident">CacheError::CacheBroken</span>)<span class="question-mark">?</span>;
+                <span class="ident">block_ref</span>.<span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>;
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
             }
 
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">blocks</span>.<span class="ident">is_full</span>() {
@@ -1961,10 +2186,21 @@
                 <span class="prelude-val">Err</span>(<span class="ident">CacheError::CacheBroken</span>(<span class="ident">ListError::ListEmpty</span>))
             );
 
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lru_cache</span> <span class="op">=</span> <span class="ident">LRUCache</span>::<span class="op">&lt;</span><span class="ident">i32</span>, <span class="ident">i32</span><span class="op">&gt;</span><span class="ident">::with_capacity</span>(<span class="number">2</span>);
+            <span class="macro">assert!</span>(<span class="ident">lru_cache</span>.<span class="ident">insert</span>(<span class="number">1</span>, <span class="number">1</span>).<span class="ident">is_ok</span>());
+            <span class="macro">assert!</span>(<span class="ident">lru_cache</span>.<span class="ident">insert</span>(<span class="number">2</span>, <span class="number">2</span>).<span class="ident">is_ok</span>());
+            <span class="macro">assert_eq!</span>(<span class="ident">lru_cache</span>.<span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="number">1</span>), <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="number">1</span>));
+            <span class="macro">assert!</span>(<span class="ident">lru_cache</span>.<span class="ident">insert</span>(<span class="number">3</span>, <span class="number">3</span>).<span class="ident">is_ok</span>());
+            <span class="macro">assert_eq!</span>(<span class="ident">lru_cache</span>.<span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="number">2</span>), <span class="prelude-val">Err</span>(<span class="ident">CacheError::CacheMiss</span>));
+            <span class="macro">assert!</span>(<span class="ident">lru_cache</span>.<span class="ident">insert</span>(<span class="number">1</span>, <span class="op">-</span><span class="number">1</span>).<span class="ident">is_ok</span>());
+            <span class="macro">assert_eq!</span>(<span class="ident">lru_cache</span>.<span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="number">1</span>), <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="op">-</span><span class="number">1</span>));
+            <span class="macro">assert!</span>(<span class="ident">lru_cache</span>.<span class="ident">insert</span>(<span class="number">4</span>, <span class="number">4</span>).<span class="ident">is_ok</span>());
+            <span class="macro">assert_eq!</span>(<span class="ident">lru_cache</span>.<span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="number">3</span>), <span class="prelude-val">Err</span>(<span class="ident">CacheError::CacheMiss</span>));
+
             <span class="kw">let</span> <span class="ident">capacity</span> <span class="op">=</span> <span class="number">5</span>;
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lru_cache</span> <span class="op">=</span> <span class="ident">LRUCache</span>::<span class="op">&lt;</span><span class="ident">i32</span>, <span class="ident">i32</span><span class="op">&gt;</span><span class="ident">::with_capacity</span>(<span class="ident">capacity</span>);
-            <span class="macro">assert_eq!</span>(<span class="ident">lru_cache</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="number">0</span>), <span class="prelude-val">Err</span>(<span class="ident">CacheError::CacheMiss</span>));
+            <span class="macro">assert_eq!</span>(<span class="ident">lru_cache</span>.<span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="number">0</span>), <span class="prelude-val">Err</span>(<span class="ident">CacheError::CacheMiss</span>));
 
             <span class="kw">for</span> <span class="ident">ele</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">capacity</span> {
                 <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">ele</span> <span class="kw">as</span> <span class="ident">i32</span>;
@@ -1973,20 +2209,20 @@
 
             <span class="kw">for</span> <span class="ident">ele</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">capacity</span> {
                 <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">ele</span> <span class="kw">as</span> <span class="ident">i32</span>;
-                <span class="macro">assert_eq!</span>(<span class="ident">lru_cache</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>), <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>));
+                <span class="macro">assert_eq!</span>(<span class="ident">lru_cache</span>.<span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>), <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>));
             }
 
             <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">capacity</span> <span class="kw">as</span> <span class="ident">i32</span>;
             <span class="macro">assert!</span>(<span class="ident">lru_cache</span>.<span class="ident">insert</span>(<span class="ident">x</span>, <span class="ident">x</span>).<span class="ident">is_ok</span>());
 
-            <span class="macro">assert_eq!</span>(<span class="ident">lru_cache</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>), <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>));
+            <span class="macro">assert_eq!</span>(<span class="ident">lru_cache</span>.<span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>), <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>));
 
-            <span class="macro">assert_eq!</span>(<span class="ident">lru_cache</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="number">0</span>), <span class="prelude-val">Err</span>(<span class="ident">CacheError::CacheMiss</span>));
+            <span class="macro">assert_eq!</span>(<span class="ident">lru_cache</span>.<span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="number">0</span>), <span class="prelude-val">Err</span>(<span class="ident">CacheError::CacheMiss</span>));
 
             <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">capacity</span> <span class="kw">as</span> <span class="ident">i32</span> <span class="op">/</span> <span class="number">2</span>;
             <span class="macro">assert_eq!</span>(<span class="ident">lru_cache</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>), <span class="prelude-val">Ok</span>(<span class="ident">x</span>));
 
-            <span class="macro">assert_eq!</span>(<span class="ident">lru_cache</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>), <span class="prelude-val">Err</span>(<span class="ident">CacheError::CacheMiss</span>));
+            <span class="macro">assert_eq!</span>(<span class="ident">lru_cache</span>.<span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>), <span class="prelude-val">Err</span>(<span class="ident">CacheError::CacheMiss</span>));
             <span class="macro">assert_eq!</span>(<span class="ident">lru_cache</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>), <span class="prelude-val">Err</span>(<span class="ident">CacheError::CacheMiss</span>));
         }
     }
