@@ -53,7 +53,7 @@ Refer to [API documentation](https://arindas.github.io/generational-lru/generati
 This is a library crate. You may include it in your `Cargo.toml` as follows:
 ```toml
 [dependencies]
-generational-lru = "0.1.1"
+generational-lru = "0.1"
 ```
 
 ## License
