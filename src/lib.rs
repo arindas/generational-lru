@@ -7,7 +7,7 @@
 //! let capacity = 5;
 //!
 //! let mut lru_cache = LRUCache::<i32, i32>::with_capacity(capacity);
-//! assert_eq!(lru_cache.get(&0), Err(CacheError::CacheMiss));
+//! assert_eq!(lru_cache.query(&0), Err(CacheError::CacheMiss));
 //!
 //! for ele in 0..capacity {
 //!     let x = ele as i32;
@@ -16,20 +16,20 @@
 //!
 //! for ele in 0..capacity {
 //!     let x = ele as i32;
-//!     assert_eq!(lru_cache.get(&x), Ok(&x));
+//!     assert_eq!(lru_cache.query(&x), Ok(&x));
 //! }
 //!
 //! let x = capacity as i32;
 //! assert!(lru_cache.insert(x, x).is_ok());
 //!
-//! assert_eq!(lru_cache.get(&x), Ok(&x));
+//! assert_eq!(lru_cache.query(&x), Ok(&x));
 //!
-//! assert_eq!(lru_cache.get(&0), Err(CacheError::CacheMiss));
+//! assert_eq!(lru_cache.query(&0), Err(CacheError::CacheMiss));
 //!
 //! let x = capacity as i32 / 2;
 //! assert_eq!(lru_cache.remove(&x), Ok(x));
 //!
-//! assert_eq!(lru_cache.get(&x), Err(CacheError::CacheMiss));
+//! assert_eq!(lru_cache.query(&x), Err(CacheError::CacheMiss));
 //! assert_eq!(lru_cache.remove(&x), Err(CacheError::CacheMiss));
 //!
 //! // zero capacity LRUCache is unusable
@@ -523,6 +523,11 @@ pub mod list {
             Ok(node)
         }
 
+        pub fn get_mut_value(&mut self, link: &Link) -> Result<&mut T, ListError> {
+            let node = self.get_mut(link)?;
+            Ok(&mut node.value)
+        }
+
         pub fn get(&self, link: &Link) -> Result<&Node<T>, ListError> {
             let node = self.arena.get(&link.index).ok_or(ListError::LinkBroken)?;
             Ok(node)
@@ -656,6 +661,48 @@ pub mod list {
 
             self.len -= 1;
             Ok(node.value)
+        }
+
+        /// Re-arranges the nodes in the linked list to make the node pointed to by the
+        /// given Link the tail node.
+        pub fn reposition_to_tail(&mut self, link: &Link) -> Result<(), ListError> {
+            let head = self.head.ok_or(ListError::ListEmpty)?;
+            let tail = self.tail.ok_or(ListError::ListEmpty)?;
+
+            if link == &tail {
+                return Ok(());
+            }
+
+            // list has >= 2 nodes
+
+            let head_node = self.get_mut(&head)?;
+            if link == &head {
+                self.head = head_node.next;
+            }
+
+            let node = self.get_mut(link)?;
+
+            let prev_link = node.prev;
+            let next_link = node.next;
+
+            node.prev = Some(tail);
+            node.next = None;
+
+            if let Some(link) = prev_link {
+                let prev = self.get_mut(&link)?;
+                prev.next = next_link;
+            }
+
+            if let Some(link) = next_link {
+                let next = self.get_mut(&link)?;
+                next.prev = prev_link;
+            }
+
+            let tail_node = self.get_mut(&tail)?;
+            tail_node.next = Some(*link);
+            self.tail = Some(*link);
+
+            Ok(())
         }
 
         pub fn iter(&self) -> Iter<T> {
@@ -810,6 +857,56 @@ pub mod list {
 
             assert!(list.iter().eq([1, 3].iter()));
         }
+
+        #[test]
+        fn list_reposition_to_tail() {
+            let capacity = 5;
+
+            let mut list = LinkedList::<i32>::with_capacity(capacity);
+            assert!(list.is_empty());
+
+            for ele in 0..capacity {
+                list.push_back(ele as i32).unwrap();
+            }
+
+            for _ in 0..(capacity / 2) {
+                list.reposition_to_tail(&list.head().unwrap()).unwrap();
+            }
+
+            let mut i = 0;
+            let mut lh = 0 as i32;
+            let mut rh = capacity as i32 / 2;
+            for ele in list.iter() {
+                if i <= (capacity / 2) {
+                    assert_eq!(ele, &rh);
+                    rh += 1;
+                } else {
+                    assert_eq!(ele, &lh);
+                    lh += 1;
+                }
+                i += 1
+            }
+
+            let mut list = LinkedList::<i32>::with_capacity(2);
+            let link_0 = list.push_back(0).unwrap();
+            list.reposition_to_tail(&link_0).unwrap();
+            assert_eq!(Some(link_0), list.head());
+            assert_eq!(Some(link_0), list.tail());
+
+            let link_1 = list.push_back(1).unwrap();
+
+            list.reposition_to_tail(&link_0).unwrap();
+            assert_eq!(list.get_mut_value(&link_0), Ok(&mut 0));
+
+            assert_eq!(list.head(), Some(link_1));
+            assert_eq!(list.tail(), Some(link_0));
+
+            list.reserve(1);
+            list.push_back(2).unwrap();
+            list.reposition_to_tail(&link_0).unwrap();
+
+            assert!(list.iter().eq([1, 2, 0].iter()));
+        }
     }
 }
 
@@ -823,7 +920,7 @@ pub mod lrucache {
     //! let capacity = 5;
     //!
     //! let mut lru_cache = LRUCache::<i32, i32>::with_capacity(capacity);
-    //! assert_eq!(lru_cache.get(&0), Err(CacheError::CacheMiss));
+    //! assert_eq!(lru_cache.query(&0), Err(CacheError::CacheMiss));
     //!
     //! for ele in 0..capacity {
     //!     let x = ele as i32;
@@ -832,20 +929,20 @@ pub mod lrucache {
     //!
     //! for ele in 0..capacity {
     //!     let x = ele as i32;
-    //!     assert_eq!(lru_cache.get(&x), Ok(&x));
+    //!     assert_eq!(lru_cache.query(&x), Ok(&x));
     //! }
     //!
     //! let x = capacity as i32;
     //! assert!(lru_cache.insert(x, x).is_ok());
     //!
-    //! assert_eq!(lru_cache.get(&x), Ok(&x));
+    //! assert_eq!(lru_cache.query(&x), Ok(&x));
     //!
-    //! assert_eq!(lru_cache.get(&0), Err(CacheError::CacheMiss));
+    //! assert_eq!(lru_cache.query(&0), Err(CacheError::CacheMiss));
     //!
     //! let x = capacity as i32 / 2;
     //! assert_eq!(lru_cache.remove(&x), Ok(x));
     //!
-    //! assert_eq!(lru_cache.get(&x), Err(CacheError::CacheMiss));
+    //! assert_eq!(lru_cache.query(&x), Err(CacheError::CacheMiss));
     //! assert_eq!(lru_cache.remove(&x), Err(CacheError::CacheMiss));
     //!
     //! // zero capacity LRUCache is unusable
@@ -911,8 +1008,11 @@ pub mod lrucache {
         /// Returns a reference to the value associated with the given key. If the key is not
         /// present in the cache, we return a "cache-miss" error. If the entry is found but
         /// cannot be fetched from the underlying storage, we return a "cache-broken" error.
-        pub fn get(&self, key: &K) -> Result<&V, CacheError> {
+        pub fn query(&mut self, key: &K) -> Result<&V, CacheError> {
             let link = self.block_refs.get(key).ok_or(CacheError::CacheMiss)?;
+            self.blocks
+                .reposition_to_tail(link)
+                .map_err(CacheError::CacheBroken)?;
             let node = self.blocks.get(link).map_err(CacheError::CacheBroken)?;
             Ok(&node.value.value)
         }
@@ -930,9 +1030,16 @@ pub mod lrucache {
         /// Inserts a new key value pair into this cache. If this cache is full, the least
         /// recently used entry is removed.
         pub fn insert(&mut self, key: K, value: V) -> Result<(), CacheError> {
-            let remove_result = self.remove(&key);
-            if let Err(CacheError::CacheBroken(_)) = &remove_result {
-                remove_result?;
+            if let Some(link) = self.block_refs.get(&key) {
+                self.blocks
+                    .reposition_to_tail(link)
+                    .map_err(CacheError::CacheBroken)?;
+                let block_ref = self
+                    .blocks
+                    .get_mut_value(link)
+                    .map_err(CacheError::CacheBroken)?;
+                block_ref.value = value;
+                return Ok(());
             }
 
             if self.blocks.is_full() {
@@ -962,10 +1069,21 @@ pub mod lrucache {
                 Err(CacheError::CacheBroken(ListError::ListEmpty))
             );
 
+            let mut lru_cache = LRUCache::<i32, i32>::with_capacity(2);
+            assert!(lru_cache.insert(1, 1).is_ok());
+            assert!(lru_cache.insert(2, 2).is_ok());
+            assert_eq!(lru_cache.query(&1), Ok(&1));
+            assert!(lru_cache.insert(3, 3).is_ok());
+            assert_eq!(lru_cache.query(&2), Err(CacheError::CacheMiss));
+            assert!(lru_cache.insert(1, -1).is_ok());
+            assert_eq!(lru_cache.query(&1), Ok(&-1));
+            assert!(lru_cache.insert(4, 4).is_ok());
+            assert_eq!(lru_cache.query(&3), Err(CacheError::CacheMiss));
+
             let capacity = 5;
 
             let mut lru_cache = LRUCache::<i32, i32>::with_capacity(capacity);
-            assert_eq!(lru_cache.get(&0), Err(CacheError::CacheMiss));
+            assert_eq!(lru_cache.query(&0), Err(CacheError::CacheMiss));
 
             for ele in 0..capacity {
                 let x = ele as i32;
@@ -974,20 +1092,20 @@ pub mod lrucache {
 
             for ele in 0..capacity {
                 let x = ele as i32;
-                assert_eq!(lru_cache.get(&x), Ok(&x));
+                assert_eq!(lru_cache.query(&x), Ok(&x));
             }
 
             let x = capacity as i32;
             assert!(lru_cache.insert(x, x).is_ok());
 
-            assert_eq!(lru_cache.get(&x), Ok(&x));
+            assert_eq!(lru_cache.query(&x), Ok(&x));
 
-            assert_eq!(lru_cache.get(&0), Err(CacheError::CacheMiss));
+            assert_eq!(lru_cache.query(&0), Err(CacheError::CacheMiss));
 
             let x = capacity as i32 / 2;
             assert_eq!(lru_cache.remove(&x), Ok(x));
 
-            assert_eq!(lru_cache.get(&x), Err(CacheError::CacheMiss));
+            assert_eq!(lru_cache.query(&x), Err(CacheError::CacheMiss));
             assert_eq!(lru_cache.remove(&x), Err(CacheError::CacheMiss));
         }
     }
